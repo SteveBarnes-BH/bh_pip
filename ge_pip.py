@@ -64,11 +64,14 @@ def get_proxies_from_ie():
     print(f"Getting Proxies from {url}")
     pac = ""
     try:
-        with urllib.request.urlopen(url) as pack:
+        with urllib.request.urlopen(url, timeout=3) as pack:
             pac = pack.read().decode('utf-8')
     except urllib.request.URLError:
         print(f"Failed to read from {url}")
     proxy_list = proxy_re.findall(pac)
+    for proxy in proxy_list:
+        if not proxy.lower().startswith('http'):
+            proxy_list.append('http://' + proxy)
     return proxy_list
 
 def getenv(no_env=False):
@@ -132,7 +135,7 @@ def main():
                 working = test_proxies(True)
                 if working:
                     set_no_env = True
-                    print("Now works wuggest using:")
+                    print("Now works suggest using:")
                     print(f"    SET {ENVSTR.upper()}= ",
                           flush=True)
     else:
