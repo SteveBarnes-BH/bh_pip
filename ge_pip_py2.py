@@ -19,13 +19,13 @@ import urllib
 
 
 _COPYRIGHT = """
-    BHGE Confidential
-    [Unpublished] Copyright 2019.  Baker Hughes, LLC.
+    Baker Hughes Confidential
+    [Unpublished] Copyright 2019-2020.  Baker Hughes LLC.
 
     NOTICE:  All information contained herein is, and remains the property of
-    Baker Hughes, LLC, its suppliers, and affiliates, if any.
+    Baker Hughes LLC, its suppliers, and affiliates, if any.
     The intellectual and technical concepts contained herein are proprietary to
-    Baker Hughes, LLC and its suppliers and affiliates and may be
+    Baker Hughes LLC and its suppliers and affiliates and may be
     covered by U.S. and Foreign Patents, patents in process, and are protected
     by trade secret and copyright law.
     Dissemination of this information or reproduction of this material is
@@ -64,8 +64,11 @@ def get_proxies_from_ie():
     print("Getting Proxies from %s" % url)
     pac = ""
     try:
-        with urllib.urlopen(url) as pack:
-            pac = pack.read().decode('utf-8')
+        pack = urllib.urlopen(url)
+        pac = pack.read().decode('utf-8')
+        del pack
+        #with urllib.urlopen(url) as pack:
+        #    pac = pack.read().decode('utf-8')
     except (IOError, urllib.ContentTooShortError): # urllib.URLError:
         print("Failed to read from %s" % url)
     proxy_list = proxy_re.findall(pac)
@@ -75,7 +78,7 @@ def get_proxies_from_ie():
     return proxy_list
 
 def getenv(no_env=False):
-    """ Get a copy of the environement optionally removing ENVSTR. """
+    """ Get a copy of the environment optionally removing ENVSTR. """
     myenv = os.environ.copy()
     todel = []
     if no_env:
