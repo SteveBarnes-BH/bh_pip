@@ -21,3 +21,5 @@ Where it will try to establish a working set of settings for pip and recommend t
 Where it will do the above then use the recommended settings to run the command(s). This is
 useful when you don't wish to change your settings but need a one off run of pip but it is 
 not working in the current situation.
+
+It may work on non-Windows systems but has not been tested by the author on any of them.

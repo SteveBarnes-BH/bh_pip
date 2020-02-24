@@ -14,8 +14,9 @@ import sys
 import os
 import re
 import subprocess
-import winreg
 import urllib.request
+if sys.platform == 'win32':
+    import winreg
 
 
 _COPYRIGHT = """
@@ -35,23 +36,29 @@ _COPYRIGHT = """
 
 ENVSTR = 'https_proxy'
 
-def get_pac_url_from_ie():
-    """ Get the list of possible proxies from the IE settings."""
-    auto_config_url = None
-    print("Checking for AutoConfigURL")
-    a_reg = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
-    a_key = winreg.OpenKey(
-        a_reg,
-        r"Software\Microsoft\Windows\CurrentVersion\Internet Settings")
-    _, valuecount, _ = winreg.QueryInfoKey(a_key)
-    for i in range(valuecount):
-        try:
-            name, val, _ = winreg.EnumValue(a_key, i)
-            if name == "AutoConfigURL":
-                auto_config_url = val
-        except EnvironmentError:
-            pass
-    return auto_config_url
+if sys.platform == 'win32':
+    def get_pac_url_from_ie():
+        """ Get the list of possible proxies from the IE settings."""
+        auto_config_url = None
+        print("Checking for AutoConfigURL")
+        a_reg = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
+        a_key = winreg.OpenKey(
+            a_reg,
+            r"Software\Microsoft\Windows\CurrentVersion\Internet Settings")
+        _, valuecount, _ = winreg.QueryInfoKey(a_key)
+        for i in range(valuecount):
+            try:
+                name, val, _ = winreg.EnumValue(a_key, i)
+                if name == "AutoConfigURL":
+                    auto_config_url = val
+            except EnvironmentError:
+                pass
+        print("Auto Config URL", auto_config_url)
+        return auto_config_url
+else:
+    def get_pac_url_from_ie():
+        """ On non windows platforms this isn't an option so use fixed """
+        return "https://cloudproxy.setpac.ge.com/pac.pac"
 
 
 def get_proxies_from_ie():
