@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#encoding:utf-8
+# encoding:utf-8
 """
   Author:  Steve Barnes --<Steven.Barnes@bhge.com>
   Purpose: Find & optionally set a proxy
@@ -15,7 +15,8 @@ import os
 import re
 import subprocess
 import urllib.request
-if sys.platform == 'win32':
+
+if sys.platform == "win32":
     import winreg
 
 
@@ -34,17 +35,18 @@ _COPYRIGHT = """
     Baker Hughes LLC.
 """
 
-ENVSTR = 'https_proxy'
+ENVSTR = "https_proxy"
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
+    # The following will only work on Windows platforms
     def get_pac_url_from_ie():
         """ Get the list of possible proxies from the IE settings."""
         auto_config_url = None
         print("Checking for AutoConfigURL")
         a_reg = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
         a_key = winreg.OpenKey(
-            a_reg,
-            r"Software\Microsoft\Windows\CurrentVersion\Internet Settings")
+            a_reg, r"Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+        )
         _, valuecount, _ = winreg.QueryInfoKey(a_key)
         for i in range(valuecount):
             try:
@@ -55,7 +57,10 @@ if sys.platform == 'win32':
                 pass
         print("Auto Config URL", auto_config_url)
         return auto_config_url
+
+
 else:
+    # Non-Windows alternative
     def get_pac_url_from_ie():
         """ On non windows platforms this isn't an option so use fixed """
         return "https://cloudproxy.setpac.ge.com/pac.pac"
@@ -72,17 +77,18 @@ def get_proxies_from_ie():
     pac = ""
     try:
         with urllib.request.urlopen(url, timeout=3) as pack:
-            pac = pack.read().decode('utf-8')
+            pac = pack.read().decode("utf-8")
     except urllib.request.URLError:
         print(f"Failed to read from {url}")
     proxy_list = proxy_re.findall(pac)
     for proxy in proxy_list:
-        if not proxy.lower().startswith('http'):
-            proxy_list.append('http://' + proxy)
+        if not proxy.lower().startswith("http"):
+            proxy_list.append("http://" + proxy)
     return proxy_list
 
+
 def getenv(no_env=False):
-    """ Get a copy of the environement optionally removing ENVSTR. """
+    """ Get a copy of the environment optionally removing ENVSTR. """
     myenv = os.environ.copy()
     todel = []
     if no_env:
@@ -93,63 +99,71 @@ def getenv(no_env=False):
         del myenv[key]
     return myenv
 
+
 def test_a_proxy(proxy, no_env=False):
     """ Test a single proxy."""
     result = -9
     myenv = getenv(no_env)
 
-    print(f' - Trying pip with --proxy={proxy}', end=' ', flush=True)
-    commands = [sys.executable, '-mpip', 'search', 'pip',
-                '--retries=2', f"--proxy={proxy}"]
+    print(f" - Trying pip with --proxy={proxy}", end=" ", flush=True)
+    commands = [
+        sys.executable,
+        "-mpip",
+        "search",
+        "pip",
+        "--retries=2",
+        f"--proxy={proxy}",
+    ]
     try:
         result = subprocess.check_call(
-            commands, env=myenv,
+            commands,
+            env=myenv,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             timeout=10.0,
         )
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        print('Fails!')
+        print("Fails!")
     else:
         if result == 0:
             print("Works!")
     return result == 0
 
+
 def test_proxies(no_env=False):
     """ Test the proxies and return those that work. """
     working = []
-    proxy_list = ["", ]
+    proxy_list = [
+        "",
+    ]  # Start with no command line proxy
     proxy_list.extend(get_proxies_from_ie())
     print(f"Trying {len(proxy_list)} possible proxies!")
-    working = [proxy for proxy in proxy_list if test_a_proxy(
-        proxy, no_env)]
+    working = [proxy for proxy in proxy_list if test_a_proxy(proxy, no_env)]
     return working
 
-def main():
+
+def main(pause=False):
     """ The main function to find a working proxy and use it."""
     envprox = os.getenv(ENVSTR)
     set_no_env = False
     if envprox:
-        print(f"Testing HTTPS_PROXY from envionment:\n   ",
-              end=' ', flush=True)
+        print(f"Testing HTTPS_PROXY from envionment:\n   ", end=" ", flush=True)
         if test_a_proxy(envprox):
             working = [envprox]
         else:
             working = test_proxies()
             if not working:
-                print(f"Trying as if SET {ENVSTR.upper()}=",
-                      flush=True)
+                print(f"Trying as if SET {ENVSTR.upper()}=", flush=True)
                 working = test_proxies(True)
                 if working:
                     set_no_env = True
                     print("Now works suggest using:")
-                    print(f"    SET {ENVSTR.upper()}= ",
-                          flush=True)
+                    print(f"    SET {ENVSTR.upper()}= ", flush=True)
     else:
         working = test_proxies()
 
     if working:
-        errcode = 0 # OK!
+        errcode = 0  # OK!
     else:
         errcode = "No Working Proxies Found"
 
@@ -157,14 +171,14 @@ def main():
         myenv = getenv(set_no_env)
         proxy = working[0]
         print(f"Using: --proxy={proxy}", flush=True)
-        commands = [sys.executable, '-mpip']
+        commands = [sys.executable, "-mpip"]
         commands.extend(sys.argv[1:])
         commands.append(f"--proxy={proxy}")
         errcode = subprocess.call(commands, env=myenv)
 
     if working:
         print("\nWorking Proxies:")
-        print('\n'.join(working))
+        print("\n".join(working))
         if set_no_env:
             print(f"\n\nSuggest Clearing {ENVSTR} with:")
             print(f"    SET {ENVSTR.upper()}= ")
@@ -175,8 +189,10 @@ def main():
         else:
             print(f"\tpip config unset global.proxy")
 
+    if pause:
+        inp = input("Press enter to continue!")
     sys.exit(errcode)
 
-if __name__ == '__main__':
-    main()
 
+if __name__ == "__main__":
+    main()

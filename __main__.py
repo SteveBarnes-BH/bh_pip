@@ -1,5 +1,6 @@
 #!python3
 from __future__ import print_function
+
 """
 This is the top level of ge_pip - all it does is to select between the 
 python 2 & 3 versions of the code based on the python version that it is
@@ -21,6 +22,7 @@ _COPYRIGHT = """
 """
 
 import sys
+
 # Import the appropriate version of the code.
 if sys.version_info.major > 2:
     import ge_pip
@@ -29,4 +31,4 @@ else:
 
 if __name__ == "__main__":
     print("Checking possible pip proxies for python", sys.version)
-    ge_pip.main()
+    ge_pip.main(True)
