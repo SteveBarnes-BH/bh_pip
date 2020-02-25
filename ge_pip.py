@@ -36,12 +36,13 @@ _COPYRIGHT = """
 """
 
 ENVSTR = "https_proxy"
+DEFAULT_PAC_URL = "https://cloudproxy.setpac.ge.com/pac.pac"
 
 if sys.platform == "win32":
     # The following will only work on Windows platforms
     def get_pac_url_from_ie():
         """ Get the list of possible proxies from the IE settings."""
-        auto_config_url = None
+        auto_config_url = DEFAULT_PAC_URL
         print("Checking for AutoConfigURL")
         a_reg = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
         a_key = winreg.OpenKey(
@@ -58,12 +59,11 @@ if sys.platform == "win32":
         print("Auto Config URL", auto_config_url)
         return auto_config_url
 
-
 else:
     # Non-Windows alternative
     def get_pac_url_from_ie():
         """ On non windows platforms this isn't an option so use fixed """
-        return "https://cloudproxy.setpac.ge.com/pac.pac"
+        return DEFAULT_PAC_URL
 
 
 def get_proxies_from_ie():
