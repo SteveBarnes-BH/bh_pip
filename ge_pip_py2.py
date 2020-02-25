@@ -37,6 +37,7 @@ _COPYRIGHT = """
 """
 
 ENVSTR = "https_proxy"
+ENVSTR2 = "http_proxy"
 DEFAULT_PAC_URL = "https://cloudproxy.setpac.ge.com/pac.pac"
 
 
@@ -59,6 +60,7 @@ if sys.platform == "win32":
             except EnvironmentError:
                 pass
         return auto_config_url
+
 
 else:
     # Non-Windows alternative
@@ -93,10 +95,11 @@ def get_proxies_from_ie():
 def getenv(no_env=False):
     """ Get a copy of the environment optionally removing ENVSTR. """
     myenv = os.environ.copy()
+    removes = [ENVSTR.lower(), ENVSTR2.lower()]
     todel = []
     if no_env:
         for key in myenv.keys():
-            if ENVSTR.lower() == key.lower():
+            if key.lower() in removes:
                 todel.append(key)
     for key in todel:
         del myenv[key]
@@ -119,26 +122,27 @@ def test_a_proxy_no_to(proxy, no_env=False):
         "--proxy=%s" % proxy,
     ]
     try:
-        FNULL = open(os.devnull, "w")
+        fnull = open(os.devnull, "w")
         result = subprocess.check_call(
             commands,
             env=myenv,
-            stdout=FNULL,
-            stderr=FNULL,
+            stdout=fnull,
+            stderr=fnull,
             # timeout=10.0,
         )
-    except (subprocess.CalledProcessError,):  # subprocess.TimeoutExpired):
+    except (subprocess.CalledProcessError,):
         print("Fails!")
     else:
         if result == 0:
             print("Works!")
+    sys.stdout.flush()
     return result == 0
 
 
 def test_a_proxy(proxy, no_env=False):
     """ Test a single proxy."""
     myenv = getenv(no_env)
-    result = None
+    result = "Not Tested"
 
     print(" - Trying pip with --proxy=%s" % proxy, end=" ")
     sys.stdout.flush()
@@ -151,31 +155,25 @@ def test_a_proxy(proxy, no_env=False):
         "--proxy=%s" % proxy,
     ]
     try:
-        FNULL = open(os.devnull, "w")
-        proc = subprocess.Popen(
-            commands,
-            env=myenv,
-            stdout=FNULL,
-            stderr=FNULL,
-            # timeout=10.0,
-        )
+        fnull = open(os.devnull, "w")
+        proc = subprocess.Popen(commands, env=myenv, stdout=fnull, stderr=fnull,)
         tries = 0
-        while tries < 100 and proc.poll() is None:
-            time.sleep(0.20)
+        while tries < 130 and proc.poll() is None:
+            time.sleep(0.10)
             tries += 1
         result = proc.returncode
         # print(repr(result))
         if result is None:
-            print("Fails! Timeout Expired")
+            result = "Timeout Expired"
             proc.kill()
-            result = -42
-        elif result != 0:
-            print("Fails")
-    except (subprocess.CalledProcessError,):  # subprocess.TimeoutExpired):
-        print("Fails!")
+    except subprocess.CalledProcessError:
+        print("Fails! [Error]")
+
+    if result == 0:
+        print("Works!")
     else:
-        if result == 0:
-            print("Works!")
+        print("Fails! Returned:", result)
+    sys.stdout.flush()
     return result == 0
 
 
@@ -186,33 +184,58 @@ def test_proxies(no_env=False):
         "",  # Start with no command line proxy
     ]
     proxy_list.extend(get_proxies_from_ie())
+    if no_env:
+        print(
+            "Trying as if:\n\tSET %s=\n\tSET %s=\nhad been done!"
+            % (ENVSTR.upper(), ENVSTR2.upper()),
+        )
     print("Trying %d possible proxies!" % len(proxy_list))
+    sys.stdout.flush()
     working = [proxy for proxy in proxy_list if test_a_proxy(proxy, no_env)]
+    if working and no_env:
+        print("Now works suggest changing environment proxies")
+    sys.stdout.flush()
     return working
+
+
+def report_working(working, set_no_env):
+    """ Report which proxies are working."""
+    print("\nWorking Proxies:")
+    print("\n--proxy=", "\n--proxy=".join(working))
+    if set_no_env:
+        print("\n\nSuggest Clearing environmental proxies with:")
+        for envsetting in [ENVSTR, ENVSTR2]:
+            print("    SET %s= " % envsetting.upper())
+        print("or equivelent!")
+    print("N.B. It may be worth setting your pip default with:")
+    proxy = working[0]
+    if proxy:
+        print("\tpip config set global.proxy %s" % proxy)
+    else:
+        print("\tpip config unset global.proxy")
+    sys.stdout.flush()
 
 
 def main(pause=False):
     """ The main function to find a working proxy and use it."""
-    envprox = os.getenv(ENVSTR)
     set_no_env = False
-    if envprox:
-        print("Testing HTTPS_PROXY from envionment:\n   ", end=" ")
-        sys.stdout.flush()
-        if test_a_proxy(envprox):
-            working = [envprox]
-        else:
-            working = test_proxies()
-            if not working:
-                print("Trying as if SET %s=" % ENVSTR.upper())
-                sys.stdout.flush()
-                working = test_proxies(True)
-                if working:
-                    set_no_env = True
-                    print("Now works suggest using:")
-                    print("    SET %s= " % ENVSTR.upper())
-                    sys.stdout.flush()
-    else:
+    envs_found = False
+    working = []
+    for envsetting in [ENVSTR, ENVSTR2]:
+        envprox = os.getenv(envsetting)
+        if envprox:
+            envs_found = True
+            print("Testing %s from envionment:\n   " % envsetting, end=" ")
+            sys.stdout.flush()
+            if test_a_proxy(envprox):
+                working.append(envprox)
+
+    if not working:  # So try the proxies we can find
         working = test_proxies()
+
+    if not working and envs_found:  # Still no but env settings found
+        working = test_proxies(True)
+        set_no_env = len(working) > 0
 
     if working:
         errcode = 0  # OK!
@@ -220,6 +243,7 @@ def main(pause=False):
         errcode = "No Working Proxies Found"
 
     if len(sys.argv) > 2 and working:
+        print("Now trying your command(s)")
         myenv = getenv(set_no_env)
         proxy = working[0]
         print("Using: --proxy=%s" % proxy)
@@ -230,20 +254,12 @@ def main(pause=False):
         errcode = subprocess.call(commands, env=myenv)
 
     if working:
-        print("\nWorking Proxies:")
-        print("\n".join(working))
-        if set_no_env:
-            print("\n\nSuggest Clearing %s with:" % ENVSTR)
-            print("    SET %s= " % ENVSTR.upper())
-        print("N.B. It may be worth setting your pip default with:")
-        proxy = working[0]
-        if proxy:
-            print("\tpip config set global.proxy %s" % proxy)
-        else:
-            print("\tpip config unset global.proxy")
+        report_working(working, set_no_env)
+    else:
+        print(errcode)
 
     if pause:
-        inp = raw_input("Press enter to continue!")
+        dummy = raw_input("Press enter to continue!")
     sys.exit(errcode)
 
 
