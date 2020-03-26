@@ -38,14 +38,32 @@ _COPYRIGHT = """
 
 ENVSTR = "https_proxy"
 ENVSTR2 = "http_proxy"
-DEFAULT_PAC_URL = "https://cloudproxy.setpac.ge.com/pac.pac"
-
+DEFAULT_PAC_URLS = [
+    "https://cloudproxy.setpac.ge.com/pac.pac",
+    "http://myapps.setpac.ge.com/pac.pac",
+    ]
+DEFAULT_PROXIES = [
+    'http://PITC-Zscaler-Americas-Alpharetta3PR.proxy.corporate.ge.com:80',
+    'http://PITC-Zscaler-Americas-Cincinnati3PR.proxy.corporate.ge.com:80',
+    'http://PITC-Zscaler-US-Milwaukee.proxy.corporate.ge.com:80',
+    'http://PITC-Zscaler-EMEA-Amsterdam3PR.proxy.corporate.ge.com:80',
+    'http://PITC-Zscaler-EMEA-London3PR.proxy.corporate.ge.com:80',
+    'http://PITC-Zscaler-ASPAC-Singapore3PR.proxy.corporate.ge.com:80',
+    'http://PITC-Zscaler-ASPAC-Bangalore3PR.proxy.corporate.ge.com:80',
+    'http://PITC-Zscaler-ASPAC-Tokyo3PR.proxy.corporate.ge.com:80',
+    'http://grc-americas-pitc-sanraz.proxy.corporate.gtm.ge.com:80',
+    'http://grc-americas-sanra-pitc-wkcz.proxy.corporate.gtm.ge.com:80',
+    'http://grc-americas-pitc-sanraz.proxy.corporate.gtm.ge.com:80',
+    'http://PITC-Zscaler-Global-CloudHubs.proxy.corporate.ge.com:80',
+    'http://PITC-Zscaler-AmericasZ.proxy.corporate.ge.com:80',
+    'http://gateway.ge.zscalertwo.net:80',
+]
 
 if sys.platform == "win32":
     # The following will only work on Windows platforms
-    def get_pac_url_from_ie():
+    def get_pac_urls_from_ie():
         """ Get the list of possible proxies from the IE settings."""
-        auto_config_url = DEFAULT_PAC_URL
+        auto_config_url = DEFAULT_PAC_URLS
         print("Checking for AutoConfigURL")
         a_reg = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
         a_key = winreg.OpenKey(
@@ -58,38 +76,39 @@ if sys.platform == "win32":
                 if name == "AutoConfigURL":
                     auto_config_url = val
             except EnvironmentError:
-                pass
-        return auto_config_url
+                return DEFAULT_PAC_URLS
+        return [auto_config_url, ]
 
 
 else:
     # Non-Windows alternative
-    def get_pac_url_from_ie():
+    def get_pac_urls_from_ie():
         """ On non windows platforms this isn't an option so use fixed """
         print("Not on Windows so using default pac file URL")
-        return DEFAULT_PAC_URL
+        return DEFAULT_PAC_URLS
 
 
 def get_proxies_from_ie():
     """ Get the list of possible proxies from the IE settings."""
     proxy_re = re.compile(r'"PROXY\s+(.+:\d+).*"')
     proxy_list = []
-    url = get_pac_url_from_ie()
-    if url is None:
+    urls = get_pac_urls_from_ie()
+    if urls is None:
         return proxy_list
-    print("Getting Proxies from %s" % url)
-    pac = ""
-    try:
-        pack = urllib2.urlopen(url, timeout=2)
-        pac = pack.read().decode("utf-8")
-        del pack
-    except (IOError, urllib2.URLError):  # urllib.URLError:
-        print("Failed to read from %s" % url)
-    proxy_list = proxy_re.findall(pac)
-    for proxy in proxy_list:
-        if not proxy.lower().startswith("http"):
-            proxy_list.append("http://" + proxy)
-    return proxy_list
+    for url in urls:
+        print("Getting Proxies from %s" % url)
+        pac = ""
+        try:
+            pack = urllib2.urlopen(url, timeout=2)
+            pac = pack.read().decode("utf-8")
+            del pack
+        except (IOError, urllib2.URLError):  # urllib.URLError:
+            print("Failed to read from %s" % url)
+        proxy_list.extend(proxy_re.findall(pac))
+        for proxy in proxy_list:
+            if not proxy.lower().startswith("http"):
+                proxy_list.append("http://" + proxy)
+    return list(set(proxy_list))
 
 
 def getenv(no_env=False):
@@ -158,7 +177,7 @@ def test_a_proxy(proxy, no_env=False):
         fnull = open(os.devnull, "w")
         proc = subprocess.Popen(commands, env=myenv, stdout=fnull, stderr=fnull,)
         tries = 0
-        while tries < 130 and proc.poll() is None:
+        while tries < 150 and proc.poll() is None:
             time.sleep(0.10)
             tries += 1
         result = proc.returncode
@@ -177,13 +196,16 @@ def test_a_proxy(proxy, no_env=False):
     return result == 0
 
 
-def test_proxies(no_env=False):
+def test_proxies(no_env=False, use_defaults=False):
     """ Test the proxies and return those that work. """
     working = []
-    proxy_list = [
-        "",  # Start with no command line proxy
-    ]
-    proxy_list.extend(get_proxies_from_ie())
+    if use_defaults:
+        proxy_list = DEFAULT_PROXIES
+    else:
+        proxy_list = [
+            "",  # Start with no command line proxy
+        ]
+        proxy_list.extend(get_proxies_from_ie())
     if no_env:
         print(
             "Trying as if:\n\tSET %s=\n\tSET %s=\nhad been done!"
@@ -235,6 +257,13 @@ def main(pause=False):
 
     if not working and envs_found:  # Still no but env settings found
         working = test_proxies(True)
+        set_no_env = len(working) > 0
+    if not working:  # So try the default proxies
+        print("Testing Fallback Proxies")
+        working = test_proxies(False, True)
+
+    if not working and envs_found:  # Still no but env settings found
+        working = test_proxies(True, True)
         set_no_env = len(working) > 0
 
     if working:
