@@ -15,6 +15,9 @@ import os
 import re
 import subprocess
 import urllib.request
+import zipfile
+import datetime
+from distutils.version import StrictVersion
 
 if sys.platform == "win32":
     import winreg
@@ -40,22 +43,22 @@ ENVSTR2 = "http_proxy"
 DEFAULT_PAC_URLS = [
     "https://cloudproxy.setpac.ge.com/pac.pac",
     "http://myapps.setpac.ge.com/pac.pac",
-    ]
+]
 DEFAULT_PROXIES = [
-    'http://PITC-Zscaler-Americas-Alpharetta3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-Americas-Cincinnati3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-US-Milwaukee.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-EMEA-Amsterdam3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-EMEA-London3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-ASPAC-Singapore3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-ASPAC-Bangalore3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-ASPAC-Tokyo3PR.proxy.corporate.ge.com:80',
-    'http://grc-americas-pitc-sanraz.proxy.corporate.gtm.ge.com:80',
-    'http://grc-americas-sanra-pitc-wkcz.proxy.corporate.gtm.ge.com:80',
-    'http://grc-americas-pitc-sanraz.proxy.corporate.gtm.ge.com:80',
-    'http://PITC-Zscaler-Global-CloudHubs.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-AmericasZ.proxy.corporate.ge.com:80',
-    'http://gateway.ge.zscalertwo.net:80',
+    "http://PITC-Zscaler-Americas-Alpharetta3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-Americas-Cincinnati3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-US-Milwaukee.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-EMEA-Amsterdam3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-EMEA-London3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-ASPAC-Singapore3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-ASPAC-Bangalore3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-ASPAC-Tokyo3PR.proxy.corporate.ge.com:80",
+    "http://grc-americas-pitc-sanraz.proxy.corporate.gtm.ge.com:80",
+    "http://grc-americas-sanra-pitc-wkcz.proxy.corporate.gtm.ge.com:80",
+    "http://grc-americas-pitc-sanraz.proxy.corporate.gtm.ge.com:80",
+    "http://PITC-Zscaler-Global-CloudHubs.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-AmericasZ.proxy.corporate.ge.com:80",
+    "http://gateway.ge.zscalertwo.net:80",
 ]
 
 if sys.platform == "win32":
@@ -77,7 +80,9 @@ if sys.platform == "win32":
             except EnvironmentError:
                 return DEFAULT_PAC_URLS
         print("Auto Config URL", auto_config_url)
-        return [auto_config_url, ]
+        return [
+            auto_config_url,
+        ]
 
 
 else:
@@ -99,7 +104,14 @@ def get_proxies_from_ie():
         pac = ""
         try:
             with urllib.request.urlopen(url, timeout=3) as pack:
+                when = datetime.datetime.now()
+                fname = f"pac_{when}.pac".replace(" ", "_").replace(":", "_")
                 pac = pack.read().decode("utf-8")
+                print("Save pack to", fname)
+                with open(fname, "wt") as outfile:
+                    outfile.write(f"# Read from {url} at {when}\n")
+                    outfile.write(pac)
+
         except urllib.request.URLError:
             print(f"Failed to read from {url}")
         proxy_list.extend(proxy_re.findall(pac))
@@ -107,6 +119,43 @@ def get_proxies_from_ie():
             if not proxy.lower().startswith("http"):
                 proxy_list.append("http://" + proxy)
     return list(set(proxy_list))
+
+
+def get_pysocks():
+    """ Conditionally Get PySocks. """
+    container, final = os.path.split(__file__)
+    if os.path.isfile(container):
+        extract_pysocks(container)
+    else:
+        print(container, "is not a file.")
+
+
+def extract_pysocks(container):
+    """ Extract PySocks from container."""
+    print("Trying to open", container)
+    try:
+        zfile = zipfile.ZipFile(container)
+    except Exception as exc:
+        print(exc)
+        return
+    filelist = [fn for fn in zfile.namelist() if fn.startswith("PySocks")]
+    print(filelist)
+
+
+def get_pysocks_ver():
+    """ Get the current installed version of PySocks."""
+    commands = [
+        sys.executable,
+        "-mpip",
+        "show",
+        "PySocks",
+    ]
+    try:
+        result = subprocess.check_output(commands,)
+    except subprocess.CalledProcessError:
+        version = 0
+    else:
+        lines = result.splitlines()
 
 
 def getenv(no_env=False):
@@ -194,12 +243,15 @@ def report_working(working, set_no_env):
     proxy = working[0]
     if proxy:
         print(f"\tpip config set global.proxy {proxy}")
+        print(f"conda may benefit from:")
+        print(f"\tconda config set --set proxy_servers.http {proxy}")
     else:
         print(f"\tpip config unset global.proxy")
 
 
 def main(pause=False):
     """ The main function to find a working proxy and use it."""
+    print(__file__)
     set_no_env = False
     envs_found = False
     working = []
@@ -254,4 +306,6 @@ def main(pause=False):
 
 
 if __name__ == "__main__":
+    print("Proxy Checker")
+    # get_pysocks_ver()
     main()

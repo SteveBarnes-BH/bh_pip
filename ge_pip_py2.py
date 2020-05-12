@@ -16,6 +16,8 @@ import re
 import subprocess
 import time
 import urllib2
+import zipfile
+import tempfile
 
 if sys.platform == "win32":
     import winreg
@@ -41,22 +43,22 @@ ENVSTR2 = "http_proxy"
 DEFAULT_PAC_URLS = [
     "https://cloudproxy.setpac.ge.com/pac.pac",
     "http://myapps.setpac.ge.com/pac.pac",
-    ]
+]
 DEFAULT_PROXIES = [
-    'http://PITC-Zscaler-Americas-Alpharetta3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-Americas-Cincinnati3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-US-Milwaukee.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-EMEA-Amsterdam3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-EMEA-London3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-ASPAC-Singapore3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-ASPAC-Bangalore3PR.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-ASPAC-Tokyo3PR.proxy.corporate.ge.com:80',
-    'http://grc-americas-pitc-sanraz.proxy.corporate.gtm.ge.com:80',
-    'http://grc-americas-sanra-pitc-wkcz.proxy.corporate.gtm.ge.com:80',
-    'http://grc-americas-pitc-sanraz.proxy.corporate.gtm.ge.com:80',
-    'http://PITC-Zscaler-Global-CloudHubs.proxy.corporate.ge.com:80',
-    'http://PITC-Zscaler-AmericasZ.proxy.corporate.ge.com:80',
-    'http://gateway.ge.zscalertwo.net:80',
+    "http://PITC-Zscaler-Americas-Alpharetta3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-Americas-Cincinnati3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-US-Milwaukee.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-EMEA-Amsterdam3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-EMEA-London3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-ASPAC-Singapore3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-ASPAC-Bangalore3PR.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-ASPAC-Tokyo3PR.proxy.corporate.ge.com:80",
+    "http://grc-americas-pitc-sanraz.proxy.corporate.gtm.ge.com:80",
+    "http://grc-americas-sanra-pitc-wkcz.proxy.corporate.gtm.ge.com:80",
+    "http://grc-americas-pitc-sanraz.proxy.corporate.gtm.ge.com:80",
+    "http://PITC-Zscaler-Global-CloudHubs.proxy.corporate.ge.com:80",
+    "http://PITC-Zscaler-AmericasZ.proxy.corporate.ge.com:80",
+    "http://gateway.ge.zscalertwo.net:80",
 ]
 
 if sys.platform == "win32":
@@ -77,7 +79,9 @@ if sys.platform == "win32":
                     auto_config_url = val
             except EnvironmentError:
                 return DEFAULT_PAC_URLS
-        return [auto_config_url, ]
+        return [
+            auto_config_url,
+        ]
 
 
 else:
@@ -123,6 +127,28 @@ def getenv(no_env=False):
     for key in todel:
         del myenv[key]
     return myenv
+
+
+def get_pysocks():
+    """ Conditionally Get PySocks. """
+    container, final = os.path.split(__file__)
+    if os.path.isfile(container):
+        extract_pysocks(container)
+    else:
+        print(container, "is not a file.")
+
+
+def extract_pysocks(container):
+    """ Extract PySocks from container."""
+    tempdir = tempfile.gettempdir()
+    print("Trying to open", container)
+    try:
+        zfile = zipfile.ZipFile(container)
+    except Exception as exc:
+        print(exc)
+        return
+    filelist = [fn for fn in zfile.namelist() if fn.startswith("PySocks")]
+    print(filelist)
 
 
 def test_a_proxy_no_to(proxy, no_env=False):
@@ -233,6 +259,8 @@ def report_working(working, set_no_env):
     proxy = working[0]
     if proxy:
         print("\tpip config set global.proxy %s" % proxy)
+        print(f"conda may benefit from:")
+        print(f"\tconda config set --set proxy_servers.http" % proxy)
     else:
         print("\tpip config unset global.proxy")
     sys.stdout.flush()
@@ -240,6 +268,8 @@ def report_working(working, set_no_env):
 
 def main(pause=False):
     """ The main function to find a working proxy and use it."""
+    print(__file__)
+
     set_no_env = False
     envs_found = False
     working = []
@@ -293,4 +323,5 @@ def main(pause=False):
 
 
 if __name__ == "__main__":
+    print("Python 2 Proxy Checker")
     main()
