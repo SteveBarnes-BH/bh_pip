@@ -244,7 +244,7 @@ def report_working(working, set_no_env):
     if proxy:
         print(f"\tpip config set global.proxy {proxy}")
         print(f"conda may benefit from:")
-        print(f"\tconda config set --set proxy_servers.http {proxy}")
+        print(f"\tconda config --set proxy_servers.http {proxy}")
     else:
         print(f"\tpip config unset global.proxy")
 

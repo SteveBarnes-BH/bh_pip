@@ -260,7 +260,7 @@ def report_working(working, set_no_env):
     if proxy:
         print("\tpip config set global.proxy %s" % proxy)
         print("conda may benefit from:")
-        print("\tconda config set --set proxy_servers.http" % proxy)
+        print("\tconda config --set proxy_servers.http" % proxy)
     else:
         print("\tpip config unset global.proxy")
     sys.stdout.flush()
