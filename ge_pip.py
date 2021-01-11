@@ -80,6 +80,8 @@ if sys.platform == "win32":
             except EnvironmentError:
                 return DEFAULT_PAC_URLS
         print("Auto Config URL", auto_config_url)
+        if isinstance(auto_config_url, list):
+            return auto_config_url
         return [
             auto_config_url,
         ]
