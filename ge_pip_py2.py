@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # encoding:utf-8
 """
-  Author:  Steve Barnes --<Steven.Barnes@bhge.com>
+  Author:  Steve Barnes --<Steven.Barnes@bakerhughes.com>
   Purpose: Find & optionally set a proxy python 2 version
   Created: 26/09/2019
 
@@ -22,20 +22,27 @@ import tempfile
 if sys.platform == "win32":
     import winreg
 
+try:
+    from build_info import BUILD_INFO
+except Exception:
+    BUILD_INFO = "Unknown"
+
 
 _COPYRIGHT = """
-    Baker Hughes Confidential
-    [Unpublished] Copyright 2019-2020.  Baker Hughes LLC.
 
+    Baker Hughes Energy Technology UK Limited Confidential
+    [Unpublished] Copyright 2021.  Baker Hughes Energy Technology UK Limited.
     NOTICE:  All information contained herein is, and remains the property of
-    Baker Hughes LLC, its suppliers, and affiliates, if any.
+    Baker Hughes Energy Technology UK Limited, its suppliers, and affiliates,
+    if any.
     The intellectual and technical concepts contained herein are proprietary to
-    Baker Hughes LLC and its suppliers and affiliates and may be
-    covered by U.S. and Foreign Patents, patents in process, and are protected
-    by trade secret and copyright law.
+    Baker Hughes Energy Technology UK Limited and its suppliers and affiliates
+    and may be covered by U.S. and Foreign Patents, patents in process, and are
+    protected by trade secret and copyright law.
     Dissemination of this information or reproduction of this material is
-    strictly forbidden unless prior written permission is obtained from
-    Baker Hughes, LLC.
+    strictly forbidden unless prior written permission is obtained from Baker
+    Hughes Energy Technology UK Limited.
+
 """
 
 ENVSTR = "https_proxy"
@@ -79,6 +86,8 @@ if sys.platform == "win32":
                     auto_config_url = val
             except EnvironmentError:
                 return DEFAULT_PAC_URLS
+        if isinstance(auto_config_url, list): # cope with multiple returns
+            return auto_config_url
         return [
             auto_config_url,
         ]
@@ -161,8 +170,9 @@ def test_a_proxy_no_to(proxy, no_env=False):
     commands = [
         sys.executable,
         "-mpip",
-        "search",
-        "pip",
+        "download",
+        "semver",
+        "--no-cache-dir",
         "--retries=2",
         "--proxy=%s" % proxy,
     ]
@@ -269,6 +279,7 @@ def report_working(working, set_no_env):
 def main(pause=False):
     """ The main function to find a working proxy and use it."""
     print(__file__)
+    print("Build Info:", BUILD_INFO)
 
     set_no_env = False
     envs_found = False

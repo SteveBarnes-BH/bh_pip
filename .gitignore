@@ -5,3 +5,4 @@ __pycache__/
 lextab.py
 yacctab.py
 *.pac
+*.whl
