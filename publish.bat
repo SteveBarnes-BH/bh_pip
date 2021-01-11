@@ -1,1 +1,1 @@
-copy /Y ..\GE_Pip.py "..\Desktop\Box Sync (New)\Box Sync\GE_Pip"
+copy /Y ..\GE_Pip.py "..\..\Box Sync\GE_Pip"
