@@ -1,8 +1,8 @@
-# About GE_Pip
+# About BH_Pip
 
 ## Why does it exist?
 
-GE_Pip grew out of problems within the company exepericed with running the 
+BH_Pip grew out of problems within the company exepericed with running the 
 [python pip](https://en.wikipedia.org/wiki/Pip_(package_manager) tool to install and
 update python packages _(mostly hosted at the Python Package Index <https://pypi.org/>)_.
 
@@ -25,11 +25,11 @@ It was eventually realised that the users ability to browse the web wasa control
 `pac.pac` the URL of which was set within the Internet Explorer settings and the exact version of which was available
 depended on the factors above, _(probably not the socks)_.
 
-Manually fetching and parsing this file was not for everybody so GE_Pip was born.
+Manually fetching and parsing this file was not for everybody so BH_Pip was born.
 
 ## What does it do?
 
-When GE_Pip.py is executed it follows the following process:
+When BH_Pip.py is executed it follows the following process:
 
  1. Query the local internet explorer settings for the URL of the proxy configuration file.
  1. Fetch that file if possible.
@@ -42,16 +42,16 @@ When GE_Pip.py is executed it follows the following process:
    1. if additional operations were specified try to perform these.
  1. If none then tell the user.
 
-## Running GE_Pip
+## Running BH_Pip
 
 ### Running without additional operations
 
-Running `GE_Pip.py` relies on you having `python` installed which since you are trying to use `pip` is a near cert!
+Running `BH_Pip.py` relies on you having `python` installed which since you are trying to use `pip` is a near cert!
 
 
 To run it open a command prompt e.g. _Windows-R_ `cmd` on Windows and type:
 ```sh
-python GE_Pip.py
+python BH_Pip.py
 ```
 If your associations are set you should be also able to simply double click in the file.
 
@@ -84,7 +84,7 @@ Working Proxies:
 --proxy=PITC-Zscaler-EMEA-London3PR.proxy.corporate.ge.com:80
 N.B. It may be worth setting your pip default with:
         pip config unset global.proxy
-GE_pip has dowloaded a semver wheel that you may wish to delete
+BH_pip has dowloaded a semver wheel that you may wish to delete
 Press enter to continue!
 ```
 
@@ -96,12 +96,12 @@ You can specify any valid pip command and if at least one working set of setting
 be attempted with those settings. This is handy if you are not in your usual environment and do not wish to change
 any settings. An example wouuld be:
 ```cmd
-python GE_Pip.py list -o
+python BH_Pip.py list -o
 ```
 To list all outdated packages or
 
 ```cmd
-python GE_Pip.py install -U ipython
+python BH_Pip.py install -U ipython
 ```
 
 ## Which python & platform will it work on?
@@ -118,9 +118,9 @@ It has beeen tested and reported to work with reduced functionallity on both Lin
 
 ## Why doesn't it look like python in an editor or file viewer?
 
-The actual GE_Pip.py file is infact a zip file containing both Python 2 & 3 versions of the code. This zip file is structed so that 
+The actual BH_Pip.py file is infact a zip file containing both Python 2 & 3 versions of the code. This zip file is structed so that 
 python can execute it directly, _Python has had this ability since version 2.6_. You can extract the source code if you wish.
 
 ## Where does it live?
 
-Currently the home page for GE_Pip is: <https://github.build.ge.com/GE-Pip-Maintainers/ge_pip> this should be used for problem reporting.
+Currently the home page for BH_Pip is: <https://github.build.ge.com/212303160/bh_pip> this should be used for problem reporting.
