@@ -8,7 +8,7 @@ invoked from.
 """
 _COPYRIGHT = """
     Baker Hughes Confidential
-    [Unpublished] Copyright 2019-2020.  Baker Hughes LLC.
+    [Unpublished] Copyright 2021.  Baker Hughes LLC.
 
     NOTICE:  All information contained herein is, and remains the property of
     Baker Hughes LLC, its suppliers, and affiliates, if any.
@@ -25,10 +25,14 @@ import sys
 
 # Import the appropriate version of the code.
 if sys.version_info.major > 2:
-    import ge_pip
+    import bh_pip
 else:
-    import ge_pip_py2 as ge_pip
+    import bh_pip_py2 as bh_pip
+from defaults import DESCRIPTION
 
 if __name__ == "__main__":
-    print("Checking possible pip proxies for python", sys.version)
-    ge_pip.main(True)
+    if "--help" in sys.argv:
+        print(DESCRIPTION)
+    else:
+        print("Checking possible pip proxies for python", sys.version)
+        bh_pip.main(True)

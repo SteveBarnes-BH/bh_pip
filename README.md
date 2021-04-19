@@ -1,10 +1,10 @@
 # ge_pip
-A pip wrapper that does its best to cope with the GE proxy settings
+A pip wrapper that does its best to cope with the BH proxy settings
 
 Original Author: Steve Barnes (212303160) Steven.Barnes@BakerHughes.com 
 
 ## Licence: 
-This code is free to use for all within the GE and Related Companies.
+This code is free to use for all within the BH and Related Companies.
 This code is supplied without any warranty and any support is given on an ad-hock basis.
 
 This code should work with python 2.7 and >3.5
@@ -12,11 +12,11 @@ This code should work with python 2.7 and >3.5
 ## Usage
 This code can be used either as simply:
 
-    python ge_pip.py
+    python bh_pip.py
 
 Where it will try to establish a working set of settings for pip and recommend them to you OR
 
-    python ge_pip.py pip_comnads...
+    python bh_pip.py pip_comnads...
 
 Where it will do the above then use the recommended settings to run the command(s). This is
 useful when you don't wish to change your settings but need a one off run of pip but it is 
@@ -49,7 +49,7 @@ Which of these contains the current correct settings for the current moment in t
  
 Additionaly pip has a number of mechanisms for picking up the settings to use, _with a non-inituative set of precidences_.
 
-This all adds up to the potential for the users to often find that they cannot use pip which can block progress or lead to less than optimal maintainance & installation practices. Probably the number one topic of conversation in the Python Yammer groups within GE has been "pip is not working for me/us" and many hours of work have been lost attempting to resolve such issues. GE_pip was born out of this.
+This all adds up to the potential for the users to often find that they cannot use pip which can block progress or lead to less than optimal maintainance & installation practices. Probably the number one topic of conversation in the Python Yammer groups within GE has been "pip is not working for me/us" and many hours of work have been lost attempting to resolve such issues. BH_pip was born out of this.
 
 ## How does it do what it does?
 The possible proxy settings are taken from a number of sources, including whichever pac.pac file Internet Explorer would currently use, a list of historic proxies, etc..
