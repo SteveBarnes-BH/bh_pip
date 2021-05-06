@@ -1,10 +1,11 @@
+[![BH-INTERNAL-COPY-LEFT](https://img.shields.io/badge/license-BH--INTERNAL--COPY--LEFT-018374)](LICENSE.md) 
 # ge_pip
 A pip wrapper that does its best to cope with the BH proxy settings
 
 Original Author: Steve Barnes (212303160) Steven.Barnes@BakerHughes.com 
 
 ## Licence: 
-See BH-INTERNAL-COPY-LEFT-LICENSE.md
+See [BH-INTERNAL-COPY-LEFT-LICENSE](LICENSE.md)
 
 This code is free to use for all within the BH and Related Companies.
 This code is supplied without any warranty and any support is given on an ad-hock basis.
