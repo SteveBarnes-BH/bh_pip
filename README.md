@@ -1,3 +1,4 @@
+[![BH-INTERNAL-COPY-LEFT](https://img.shields.io/badge/license-BH--INTERNAL--COPY--LEFT-018374)](LICENSE.md) 
 # ge_pip
 A pip wrapper that does its best to cope with the BH proxy settings
 
