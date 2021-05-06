@@ -1,6 +1,6 @@
 BAKER HUGHES INTERNAL COPYLEFT LICENSE
 
-Copyright (c) [2020] [Baker Hughes Inc.]
+Copyright (c) [2021] [Baker Hughes Inc.]
 
 The Baker Hughes Internal Copyleft License is a free, copyleft license for software and other digital works.
 
